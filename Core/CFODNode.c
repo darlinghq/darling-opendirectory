@@ -22,11 +22,11 @@
  */
 
 #include <CoreFoundation/CoreFoundation.h>
-#include <CoreFoundation/CFBridgingPriv.h>
+#include <CoreFoundation/CFRuntime.h>
 #include <dispatch/dispatch.h>
 #include <uuid/uuid.h>
 #include <asl.h>
-#include <assumes.h>
+#include <os/assumes.h>
 
 #include <opendirectory/odutils.h>
 
@@ -111,7 +111,7 @@ node_cache_get_and_retain(ODNodeRef node, CFErrorRef *error)
 	CFStringRef key;
 	__block bool success = false;
 
-	(void)osx_assumes_zero(node->_cached);
+	(void)os_assumes_zero(node->_cached);
 
 	key = _copy_node_key(node);
 
@@ -170,7 +170,7 @@ node_cache_release(ODNodeRef node)
 {
 	CFStringRef key;
 
-	(void)osx_assumes(node->_cached);
+	(void)os_assumes(node->_cached);
 
 	node->_cached = false;
 

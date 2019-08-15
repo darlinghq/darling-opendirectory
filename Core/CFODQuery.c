@@ -22,10 +22,10 @@
  */
 
 #include <CoreFoundation/CoreFoundation.h>
-#include <CoreFoundation/CFBridgingPriv.h>
+#include <CoreFoundation/CFRuntime.h>
 #include <dispatch/dispatch.h>
 #include <asl.h>
-#include <assumes.h>
+#include <os/assumes.h>
 
 #include <opendirectory/odutils.h>
 
@@ -203,9 +203,9 @@ _ODQueryGetOperationQueue(ODQueryRef query)
 static void
 _query_init_source(ODQueryRef query, CFRunLoopRef runLoop, CFStringRef runLoopMode)
 {
-	(void)osx_assumes(dispatch_get_current_queue() == query->_queue);
+	(void)os_assumes(dispatch_get_current_queue() == query->_queue);
 
-	(void)osx_assumes(query->_async_type == ASYNC_DISPATCH || query->_async_type == ASYNC_CF);
+	(void)os_assumes(query->_async_type == ASYNC_DISPATCH || query->_async_type == ASYNC_CF);
 
 	switch (query->_async_type) {
 	case ASYNC_DISPATCH:
@@ -253,9 +253,9 @@ _query_signal_source(ODQueryRef query)
 	CFRunLoopRef rl;
 	CFIndex i;
 
-	(void)osx_assumes(dispatch_get_current_queue() == query->_queue);
+	(void)os_assumes(dispatch_get_current_queue() == query->_queue);
 
-	(void)osx_assumes(query->_async_type == ASYNC_DISPATCH || query->_async_type == ASYNC_CF);
+	(void)os_assumes(query->_async_type == ASYNC_DISPATCH || query->_async_type == ASYNC_CF);
 
 	switch (query->_async_type) {
 	case ASYNC_DISPATCH:
@@ -279,7 +279,7 @@ _query_signal_source(ODQueryRef query)
 static void
 _query_cancel_source(ODQueryRef query)
 {
-	(void)osx_assumes(dispatch_get_current_queue() == query->_queue);
+	(void)os_assumes(dispatch_get_current_queue() == query->_queue);
 
 	if (query->_async_type == ASYNC_DISPATCH && query->_async.dispatch.source != NULL) {
 		dispatch_source_cancel(query->_async.dispatch.source);
@@ -312,7 +312,7 @@ _query_request_callback(CFDictionaryRef p, uint32_t errcode, bool complete, void
 	CFDictionaryRef attrs;
 
 	/* Sanity check. */
-	(void)osx_assumes(dispatch_get_current_queue() == query->_queue);
+	(void)os_assumes(dispatch_get_current_queue() == query->_queue);
 
 	schema_deconstruct_result(p, &funcname, &response);
 
@@ -717,8 +717,8 @@ ODQuerySynchronize(ODQueryRef query)
 		}
 
 		response = transaction_simple(&code, _NodeGetSession(query->_node), query->_node, CFSTR("ODQuerySynchronize"), 1, query->_uuid);
-		(void)osx_assumes_zero(response);
-		(void)osx_assumes(code == 0 || code == kODErrorQueryInvalid);
+		(void)os_assumes_zero(response);
+		(void)os_assumes(code == 0 || code == kODErrorQueryInvalid);
 
 		// need to reset our state even if ODQuerySynchronize succeeds
 		safe_cfrelease_null(query->_results);
@@ -754,7 +754,7 @@ void
 ODQueryScheduleWithRunLoop(ODQueryRef query, CFRunLoopRef runLoop, CFStringRef runLoopMode)
 {
 	dispatch_sync(query->_queue, ^ {
-		(void)osx_assumes(query->_async_type == ASYNC_UNSET || query->_async_type == ASYNC_CF);
+		(void)os_assumes(query->_async_type == ASYNC_UNSET || query->_async_type == ASYNC_CF);
 
 		query->_async_type = ASYNC_CF;
 
@@ -777,7 +777,7 @@ ODQueryUnscheduleFromRunLoop(ODQueryRef query, CFRunLoopRef runLoop, CFStringRef
 	dispatch_sync(query->_queue, ^ {
 		CFIndex i;
 
-		(void)osx_assumes(query->_async_type == ASYNC_CF);
+		(void)os_assumes(query->_async_type == ASYNC_CF);
 
 		if (query->_async.cf.source) {
 			CFRunLoopRemoveSource(runLoop, query->_async.cf.source, runLoopMode);

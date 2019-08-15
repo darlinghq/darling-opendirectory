@@ -1,5 +1,5 @@
 #include <CoreFoundation/CoreFoundation.h>
-#include <CoreFoundation/CFBridgingPriv.h>
+#include <CoreFoundation/CFRuntime.h>
 #include <SystemConfiguration/SystemConfiguration.h>
 
 #include "CFODTrigger.h"

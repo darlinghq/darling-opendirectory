@@ -22,7 +22,7 @@
  */
 
 #include <CoreFoundation/CoreFoundation.h>
-#include <CoreFoundation/CFBridgingPriv.h>
+#include <CoreFoundation/CFRuntime.h>
 #include <uuid/uuid.h>
 #include <ifaddrs.h>
 #include <netdb.h>

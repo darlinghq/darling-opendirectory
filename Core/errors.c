@@ -22,7 +22,7 @@
  */
 
 #include <CoreFoundation/CoreFoundation.h>
-#include "DirServicesTypes.h"
+#include <DirectoryService/DirServicesTypes.h>
 #include "CFOpenDirectory.h"
 #include "CFOpenDirectoryPriv.h"
 #include "internal.h"

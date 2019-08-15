@@ -22,9 +22,9 @@
  */
 
 #include <CoreFoundation/CoreFoundation.h>
-#include <CoreFoundation/CFBridgingPriv.h>
+#include <CoreFoundation/CFRuntime.h>
 #include <dispatch/dispatch.h>
-#include <assumes.h>
+#include <os/assumes.h>
 
 #include <opendirectory/odutils.h>
 #include <membership.h>
@@ -117,7 +117,7 @@ _ODRecordGetNode(ODRecordRef record)
 		}
 	}
 
-	(void)osx_assumes(record->_realnode != NULL);
+	(void)os_assumes(record->_realnode != NULL);
 
 	return record->_realnode;
 }

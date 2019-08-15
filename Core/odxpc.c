@@ -7,6 +7,8 @@
 #include <opendirectory/odipc.h>
 #include <opendirectory/odutils.h>
 
+#include <CFOpenDirectory/CFOpenDirectoryConstants.h>
+
 #include "rb.h"
 
 #include "odxpc.h"

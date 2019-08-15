@@ -32,7 +32,7 @@
 #define __CFOPENDIRECTORYPRIV_H
 
 #include <CFOpenDirectory/CFOpenDirectory.h>
-#include <CFOpenDirectory/CFOpenDirectoryConstantsPriv.h>
+// #include <CFOpenDirectory/CFOpenDirectoryConstantsPriv.h>
 #include <DirectoryService/DirServicesTypes.h>
 
 #include <CFOpenDirectory/CFODTrigger.h>
