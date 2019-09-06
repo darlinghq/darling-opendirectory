@@ -72,4 +72,10 @@ const CFStringRef kODErrorDomainFramework __OSX_AVAILABLE_STARTING(__MAC_10_6, _
 #include <CFOpenDirectory/CFODRecord.h>
 #include <CFOpenDirectory/CFODSession.h>
 
+// Taken from https://github.com/PureDarwin/PureDarwin/blob/c5195b68009f915023f06033612f071d629816ef/patches/OpenDirectory-39.CFOpendirectory.c.p1.patch
+#define CF_IS_OBJC(x,...) FALSE
+#define CF_OBJC_CALL(x,...) do { } while (0)
+#define CF_OBJC_VOIDCALL(x,...) do { } while (0)
+#define CF_OBJC_FUNCDISPATCH(x,...) do { } while (0)
+
 #endif /* ! __OPENDIRECTORY_CFOPENDIRECTORY__ */
