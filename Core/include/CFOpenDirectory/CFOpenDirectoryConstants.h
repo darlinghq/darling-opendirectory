@@ -4103,6 +4103,8 @@ enum ODFrameworkErrors
 	kODErrorSessionNormalDaemonInUse			=	1001,
 	kODErrorSessionDaemonNotRunning				=	1002,
 	kODErrorSessionDaemonRefused				=	1003,
+    kODErrorSessionInvalid,
+    kODErrorSessionFailed,
 
 	kODErrorSessionProxyCommunicationError		=	1100,
 	kODErrorSessionProxyVersionMismatch			=	1101,
@@ -4113,6 +4115,7 @@ enum ODFrameworkErrors
 	kODErrorNodeUnknownName						=	2000,
 	kODErrorNodeUnknownType						=	2001,
 	kODErrorNodeDisabled						=	2002,
+    kODErrorNodeInvalid,
 
 	kODErrorNodeConnectionFailed				=	2100,
 	
@@ -4125,6 +4128,7 @@ enum ODFrameworkErrors
 	kODErrorQueryInvalidMatchType				=	3100,
 	kODErrorQueryUnsupportedMatchType			=	3101,
 	kODErrorQueryTimeout						=	3102,
+    kODErrorQueryInvalid,
 	
 	/* ODRecord error codes */
 	kODErrorRecordReadOnlyNode					=	4000,
@@ -4174,6 +4178,9 @@ enum ODFrameworkErrors
 	kODErrorCredentialsInvalidLogonHours		= 	5500,
 	kODErrorCredentialsInvalidComputer			= 	5501,
     
+    /* Context errors */
+    kODErrorContextInvalid,
+
     /* Policy errors */
     kODErrorPolicyUnsupported                   =   6000,
     kODErrorPolicyOutOfRange                    =   6001,
