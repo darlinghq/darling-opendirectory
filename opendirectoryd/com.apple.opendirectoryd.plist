@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>BeginTransactionAtShutdown</key>
+	<true/>
+	<key>EnableTransactions</key>
+	<true/>
+	<key>EnvironmentVariables</key>
+	<dict>
+		<key>__CFPREFERENCES_AVOID_DAEMON</key>
+		<string>1</string>
+		<key>__CF_USER_TEXT_ENCODING</key>
+		<string>0x0:0:0</string>
+	</dict>
+	<key>KeepAlive</key>
+	<true/>
+	<key>Label</key>
+	<string>com.apple.opendirectoryd</string>
+	<key>MachServices</key>
+	<dict>
+		<!-- These are currently unimplemented -->
+		<!--
+		<key>com.apple.private.opendirectoryd.rpc</key>
+		<dict>
+			<key>HideUntilCheckIn</key>
+			<true/>
+		</dict>
+		<key>com.apple.system.DirectoryService.libinfo_v1</key>
+		<true/>
+		<key>com.apple.system.DirectoryService.membership_v1</key>
+		<true/>
+		<key>com.apple.system.opendirectoryd.api</key>
+		<true/>
+		<key>com.apple.system.opendirectoryd.libinfo</key>
+		<true/>
+		-->
+		<key>com.apple.system.opendirectoryd.membership</key>
+		<true/>
+	</dict>
+	<key>POSIXSpawnType</key>
+	<string>Interactive</string>
+	<key>Program</key>
+	<string>/usr/libexec/opendirectoryd</string>
+</dict>
+</plist>
