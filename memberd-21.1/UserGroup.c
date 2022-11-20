@@ -158,7 +158,7 @@ void AddLogEntry(int kind, UserGroup* item, guid_t* extraID);
 void OpenDirService()
 {
 	tDataBufferPtr  nodeBuffer;
-	tContextData localContext = NULL;
+	tContextData localContext = (tContextData)NULL;
 	tDataListPtr nodeName = NULL; //dsDataListAllocate( fDirRef );
 	unsigned long returnCount;
 	tDirStatus status = eDSNoErr;
@@ -1207,7 +1207,7 @@ void GenerateItemMembership(UserGroup* item)
 UserGroup* DoRecordSearch(int recordType, char* attribute, char* value, UserGroup* membershipRoot)
 {
 	unsigned long recCount = 1;
-	tContextData localContext = NULL;
+	tContextData localContext = (tContextData)NULL;
 //	OSStatus status = eDSNoErr;
 	tDataBufferPtr searchBuffer;
 	tDataListPtr recType;
@@ -1265,7 +1265,7 @@ UserGroup* DoRecordSearch(int recordType, char* attribute, char* value, UserGrou
 			break;
 		if ( status == eDSInvalidContinueData )
 		{
-			localContext = NULL;
+			localContext = (tContextData)NULL;
 			continue;
 		}
 		else if (status != eDSNoErr)
@@ -1416,7 +1416,7 @@ UserGroup* DoRecordSearch(int recordType, char* attribute, char* value, UserGrou
 				{
 					if (localContext != NULL)
 						dsReleaseContinueData(gSearchNode, localContext);
-					localContext = NULL;
+					localContext = (tContextData)NULL;
 					pthread_mutex_unlock(&gProcessMutex);
 					break;  // we only need to find the first entry
 				}
