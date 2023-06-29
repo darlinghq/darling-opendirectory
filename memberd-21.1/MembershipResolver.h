@@ -26,3 +26,7 @@ void ProcessLookup(struct kauth_identity_extlookup* request);
 int ProcessGetGroups(uint32_t uid, uint32_t* numGroups, GIDArray gids);
 int ProcessMapName(uint8_t isUser, char* name, guid_t* guid);
 void ProcessResetCache();
+
+#ifdef DARLING
+void SwapRequest(struct kauth_identity_extlookup* request);
+#endif
