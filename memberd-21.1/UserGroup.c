@@ -160,7 +160,7 @@ void OpenDirService()
 	tDataBufferPtr  nodeBuffer;
 	tContextData localContext = (tContextData)NULL;
 	tDataListPtr nodeName = NULL; //dsDataListAllocate( fDirRef );
-	unsigned long returnCount;
+	UInt32 returnCount;
 	tDirStatus status = eDSNoErr;
 	
 	if (gDirRef != 0)
@@ -1206,7 +1206,7 @@ void GenerateItemMembership(UserGroup* item)
 
 UserGroup* DoRecordSearch(int recordType, char* attribute, char* value, UserGroup* membershipRoot)
 {
-	unsigned long recCount = 1;
+	UInt32 recCount = 1;
 	tContextData localContext = (tContextData)NULL;
 //	OSStatus status = eDSNoErr;
 	tDataBufferPtr searchBuffer;
