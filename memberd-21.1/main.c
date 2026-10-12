@@ -27,6 +27,7 @@
 #include <stdio.h>		// for fprintf(), stderr, et al
 #include <unistd.h>		// for getopt(), getpid(), select() et al.
 #include <sys/stat.h>
+#include <signal.h>
 #include <c.h>
 #include <servers/bootstrap.h>
 #include <sys/sysctl.h>
@@ -336,6 +337,10 @@ void ReadConfigFile(int* maxCache, int* defaultExpiration, int* defaultNegExpira
 }
 
 int main (int argc, char * const argv[]) {
+	/* memberd is a launchd daemon that talks to clients over sockets; a peer
+	 * closing mid-write would otherwise raise SIGPIPE and kill the daemon under
+	 * the default disposition. */
+	signal(SIGPIPE, SIG_IGN);
 	const char * const	argv0 = argv[0];
 	static const char * const	argString = "dhvxsctru:g:lL";
 	char		c;
