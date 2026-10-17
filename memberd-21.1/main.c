@@ -337,9 +337,10 @@ void ReadConfigFile(int* maxCache, int* defaultExpiration, int* defaultNegExpira
 }
 
 int main (int argc, char * const argv[]) {
-	/* memberd is a launchd daemon that talks to clients over sockets; a peer
-	 * closing mid-write would otherwise raise SIGPIPE and kill the daemon under
-	 * the default disposition. */
+	/* Defensive: a write to a pipe whose reader has gone (stderr or a log sink
+	 * the daemon was started with) would otherwise raise SIGPIPE, whose default
+	 * disposition kills the daemon. Clients reach memberd over Mach (Listener.c),
+	 * not sockets, and no SIGPIPE source has been observed. */
 	signal(SIGPIPE, SIG_IGN);
 	const char * const	argv0 = argv[0];
 	static const char * const	argString = "dhvxsctru:g:lL";
