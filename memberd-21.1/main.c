@@ -337,10 +337,8 @@ void ReadConfigFile(int* maxCache, int* defaultExpiration, int* defaultNegExpira
 }
 
 int main (int argc, char * const argv[]) {
-	/* Defensive: a write to a pipe whose reader has gone (stderr or a log sink
-	 * the daemon was started with) would otherwise raise SIGPIPE, whose default
-	 * disposition kills the daemon. Clients reach memberd over Mach (Listener.c),
-	 * not sockets, and no SIGPIPE source has been observed. */
+	/* Defensive: a write to a closed stderr or log pipe returns EPIPE instead of
+	 * killing the daemon with SIGPIPE. No SIGPIPE source has been observed. */
 	signal(SIGPIPE, SIG_IGN);
 	const char * const	argv0 = argv[0];
 	static const char * const	argString = "dhvxsctru:g:lL";
