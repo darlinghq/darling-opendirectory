@@ -27,6 +27,7 @@
 #include <stdio.h>		// for fprintf(), stderr, et al
 #include <unistd.h>		// for getopt(), getpid(), select() et al.
 #include <sys/stat.h>
+#include <signal.h>
 #include <c.h>
 #include <servers/bootstrap.h>
 #include <sys/sysctl.h>
@@ -336,6 +337,9 @@ void ReadConfigFile(int* maxCache, int* defaultExpiration, int* defaultNegExpira
 }
 
 int main (int argc, char * const argv[]) {
+	/* Defensive: a write to a closed stderr or log pipe returns EPIPE instead of
+	 * killing the daemon with SIGPIPE. No SIGPIPE source has been observed. */
+	signal(SIGPIPE, SIG_IGN);
 	const char * const	argv0 = argv[0];
 	static const char * const	argString = "dhvxsctru:g:lL";
 	char		c;
