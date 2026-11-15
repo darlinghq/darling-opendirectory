@@ -2665,3 +2665,118 @@ dsConvertCFDictToAuthAuthority(CFDictionaryRef inAuthAuthorityDict)
 
 	return theAA;
 }
+
+// -- Authentication buffer helpers -------------------------------------------------------------------
+
+// An authentication buffer is a series of items, each a native-endian UInt32 length followed by that many bytes
+// (see dsAppendAuthBuffer). These two functions turn such a buffer into a data list, one node per item.
+
+tDirStatus
+dsAuthBufferGetDataListPriv(tDataBufferPtr inAuthBuff, tDataListPtr inOutDataList)
+{
+	tDirStatus			status		= eDSNoErr;
+	UInt32				offset		= 0;
+	tDataNode		   *prevNode	= NULL;
+
+	if (inAuthBuff == NULL) {
+		return eDSNullDataBuff;
+	}
+
+	if (inOutDataList == NULL) {
+		return eDSNullDataList;
+	}
+
+	// A list passed in is overwritten, not freed: callers hand in an empty one
+	inOutDataList->fDataNodeCount = 0;
+	inOutDataList->fDataListHead = NULL;
+
+	if (inAuthBuff->fBufferLength > inAuthBuff->fBufferSize) {
+		return eDSInvalidBuffFormat;
+	}
+
+	while (offset < inAuthBuff->fBufferLength && status == eDSNoErr) {
+		UInt32			itemLen		= 0;
+		tDataNode	   *node		= NULL;
+
+		if (inAuthBuff->fBufferLength - offset < sizeof(UInt32)) {
+			status = eDSInvalidBuffFormat;
+			break;
+		}
+
+		memcpy(&itemLen, &inAuthBuff->fBufferData[offset], sizeof(UInt32));
+		offset += sizeof(UInt32);
+
+		if (itemLen > inAuthBuff->fBufferLength - offset) {
+			status = eDSInvalidBuffFormat;
+			break;
+		}
+
+		node = dsAllocListNodeFromBuffPriv(&inAuthBuff->fBufferData[offset], itemLen);
+		if (node == NULL) {
+			status = eMemoryAllocError;
+			break;
+		}
+		offset += itemLen;
+
+		tDataBufferPriv	*privData = (tDataBufferPriv *)node;
+		privData->fScriptCode = kASCIICodeScript;
+
+		if (prevNode == NULL) {
+			inOutDataList->fDataListHead = node;
+		} else {
+			((tDataBufferPriv *)prevNode)->fNextPtr = node;
+			privData->fPrevPtr = prevNode;
+		}
+
+		inOutDataList->fDataNodeCount++;
+		prevNode = node;
+	}
+
+	if (status != eDSNoErr) {
+		dsDataListDeallocate(0, inOutDataList);
+	}
+
+	return status;
+}
+
+tDataListPtr
+dsAuthBufferGetDataListAllocPriv(tDataBufferPtr inAuthBuff)
+{
+	tDataListPtr	list = NULL;
+
+	if (inAuthBuff == NULL) {
+		return NULL;
+	}
+
+	list = dsDataListAllocate(0);
+	if (list != NULL && dsAuthBufferGetDataListPriv(inAuthBuff, list) != eDSNoErr) {
+		free(list);
+		list = NULL;
+	}
+
+	return list;
+}
+
+char *
+dsDataListGetNodeStringPriv(tDataListPtr inDataList, UInt32 inNodeIndex)
+{
+	tDataNode	   *node	= NULL;
+	char		   *string	= NULL;
+
+	if (inDataList == NULL || inNodeIndex == 0 || inNodeIndex > inDataList->fDataNodeCount) {
+		return NULL;
+	}
+
+	node = dsGetThisNodePriv(inDataList->fDataListHead, inNodeIndex);
+	if (node != NULL) {
+		tDataBufferPriv	*privData = (tDataBufferPriv *)node;
+
+		// One byte more than the node holds, zeroed, so the copy is always terminated
+		string = calloc(1, (size_t)privData->fBufferLength + 1);
+		if (string != NULL) {
+			memcpy(string, privData->fBufferData, privData->fBufferLength);
+		}
+	}
+
+	return string;
+}

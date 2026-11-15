@@ -29,11 +29,12 @@
 #include "DirServicesPriv.h"
 #include "DirServicesUtilsPriv.h"
 #include <dispatch/dispatch.h>
-#include <OpenDirectory/OpenDirectory.h>
-#include <OpenDirectory/OpenDirectoryPriv.h>
+#include <CFOpenDirectory/CFOpenDirectory.h>
+#include <CFOpenDirectory/CFOpenDirectoryPriv.h>
 #include <syslog.h>
 #include <sys/queue.h>
-#include "internal.h"
+
+#define safe_cfrelease_null(a)		do { if (a != NULL) { CFRelease(a); a = NULL; } } while(0)
 
 typedef enum {
 	eDirReference			= 1,
