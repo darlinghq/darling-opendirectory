@@ -111,3 +111,6 @@ _dsCopyDataFromNodeRef
 _dsCopyDataFromDirRef
 _dsCreateNodeRefData
 _dsCreateDataDirRefData
+_dsAuthBufferGetDataListAllocPriv
+_dsAuthBufferGetDataListPriv
+_dsDataListGetNodeStringPriv

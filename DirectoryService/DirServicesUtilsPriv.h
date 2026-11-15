@@ -33,6 +33,10 @@
 
 __BEGIN_DECLS
 
+tDirStatus dsAuthBufferGetDataListPriv(tDataBufferPtr inAuthBuff, tDataListPtr inOutDataList);
+tDataListPtr dsAuthBufferGetDataListAllocPriv(tDataBufferPtr inAuthBuff);
+char *dsDataListGetNodeStringPriv(tDataListPtr inDataList, UInt32 inNodeIndex);
+
 CFTypeRef dsCopyDataFromNodeRef(tDirNodeReference inNodeRef);
 CFTypeRef dsCopyDataFromDirRef(tDirReference inDirRef);
 
