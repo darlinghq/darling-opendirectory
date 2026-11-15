@@ -25,6 +25,9 @@
 #include <membership.h>
 #include <membershipPriv.h>
 #include <pwd.h>
+#include <grp.h>
+#include <string.h>
+#include <uuid/uuid.h>
 
 #include "log.h"
 
@@ -64,15 +67,29 @@ static void membership_reply_with_error(xpc_object_t incoming_message, int error
 	xpc_release(reply);
 };
 
-// copied in from libinfo
+// The compatibility UUIDs: a UUID that carries the numeric id in its last four
+// bytes. Users and groups that have a record use their own prefix; a gid that
+// has no group record gets the third prefix.
 static const uuid_t _user_compat_prefix = {0xff, 0xff, 0xee, 0xee, 0xdd, 0xdd, 0xcc, 0xcc, 0xbb, 0xbb, 0xaa, 0xaa, 0x00, 0x00, 0x00, 0x00};
 static const uuid_t _group_compat_prefix = {0xab, 0xcd, 0xef, 0xab, 0xcd, 0xef, 0xab, 0xcd, 0xef, 0xab, 0xcd, 0xef, 0x00, 0x00, 0x00, 0x00};
+static const uuid_t _unknown_gid_compat_prefix = {0xaa, 0xaa, 0xbb, 0xbb, 0xcc, 0xcc, 0xdd, 0xdd, 0xee, 0xee, 0xff, 0xff, 0x00, 0x00, 0x00, 0x00};
 #define COMPAT_PREFIX_LEN	(sizeof(uuid_t) - sizeof(id_t))
 
-static void build_uuid(const uuid_t source, id_t id, uuid_t dest) {
-	// adapted from libinfo
-	uuid_copy(dest, _user_compat_prefix);
-	*((id_t *) &dest[COMPAT_PREFIX_LEN]) = htonl(id);
+static void build_uuid(const uuid_t prefix, id_t id, uuid_t dest) {
+	uint32_t be_id = htonl(id);
+
+	uuid_copy(dest, prefix);
+	memcpy(&dest[COMPAT_PREFIX_LEN], &be_id, sizeof(be_id));
+};
+
+static void membership_reply_with_identifier(xpc_object_t incoming_message, const void* identifier, size_t identifier_size, int rec_type) {
+	xpc_object_t reply = xpc_dictionary_create_reply(incoming_message);
+
+	xpc_dictionary_set_data(reply, "identifier", identifier, identifier_size);
+	xpc_dictionary_set_int64(reply, "rectype", rec_type);
+	xpc_dictionary_set_int64(reply, OD_RPC_ERROR, 0);
+	xpc_connection_send_message(xpc_dictionary_get_remote_connection(incoming_message), reply);
+	xpc_release(reply);
 };
 
 static void rpc_mbr_identifier_translate(xpc_object_t message) {
@@ -81,16 +98,16 @@ static void rpc_mbr_identifier_translate(xpc_object_t message) {
 	size_t identifier_size = 0;
 	const void* identifier = xpc_dictionary_get_data(message, "identifier", &identifier_size);
 
+	if (identifier == NULL) {
+		membership_reply_with_error(message, EINVAL);
+		return;
+	}
 
 	if (id_type == ID_TYPE_USERNAME && target_type == ID_TYPE_UUID) {
 		char tmp_string[256];
 		strncpy(tmp_string, identifier, (identifier_size < sizeof(tmp_string)) ? identifier_size : sizeof(tmp_string));
 		tmp_string[(identifier_size < sizeof(tmp_string)) ? identifier_size : sizeof(tmp_string) - 1] = '\0';
 		struct passwd* pw = getpwnam(tmp_string);
-
-		FILE* logfile = fopen("/tmp/odd.log", "a");
-		fprintf(logfile, "name = %s; pw = %p; id length = %zu; id = %*s", tmp_string, pw, identifier_size, (int)identifier_size, (const char*)identifier);
-		fclose(logfile);
 
 		if (!pw) {
 			membership_reply_with_error(message, EINVAL);
@@ -100,15 +117,53 @@ static void rpc_mbr_identifier_translate(xpc_object_t message) {
 		uuid_t tmp_uuid;
 
 		build_uuid(_user_compat_prefix, pw->pw_uid, tmp_uuid);
+		membership_reply_with_identifier(message, tmp_uuid, sizeof(tmp_uuid), MBR_REC_TYPE_USER);
+	} else if ((id_type == ID_TYPE_UID || id_type == ID_TYPE_GID) && target_type == ID_TYPE_UUID) {
+		id_t id;
+		uuid_t tmp_uuid;
 
-		xpc_object_t reply = xpc_dictionary_create_reply(message);
+		if (identifier_size != sizeof(id)) {
+			membership_reply_with_error(message, EINVAL);
+			return;
+		}
+		memcpy(&id, identifier, sizeof(id));
 
-		xpc_dictionary_set_data(reply, "identifier", tmp_uuid, sizeof(tmp_uuid));
-		xpc_dictionary_set_int64(reply, "rectype", MBR_REC_TYPE_USER);
+		if (id_type == ID_TYPE_UID) {
+			build_uuid(_user_compat_prefix, id, tmp_uuid);
+			membership_reply_with_identifier(message, tmp_uuid, sizeof(tmp_uuid), MBR_REC_TYPE_USER);
+		} else {
+			build_uuid((getgrgid(id) != NULL) ? _group_compat_prefix : _unknown_gid_compat_prefix, id, tmp_uuid);
+			membership_reply_with_identifier(message, tmp_uuid, sizeof(tmp_uuid), MBR_REC_TYPE_GROUP);
+		}
+	} else if (id_type == ID_TYPE_UUID && (target_type == ID_TYPE_UID_OR_GID || target_type == ID_TYPE_UID || target_type == ID_TYPE_GID)) {
+		uuid_t uu;
+		uint32_t be_id;
+		id_t id;
+		int rec_type;
 
-		xpc_dictionary_set_int64(reply, OD_RPC_ERROR, 0);
-		xpc_connection_send_message(xpc_dictionary_get_remote_connection(message), reply);
-		xpc_release(reply);
+		if (identifier_size != sizeof(uu)) {
+			membership_reply_with_error(message, EINVAL);
+			return;
+		}
+		memcpy(uu, identifier, sizeof(uu));
+		memcpy(&be_id, &uu[COMPAT_PREFIX_LEN], sizeof(be_id));
+		id = ntohl(be_id);
+
+		if (memcmp(uu, _user_compat_prefix, COMPAT_PREFIX_LEN) == 0) {
+			rec_type = MBR_REC_TYPE_USER;
+		} else if (memcmp(uu, _group_compat_prefix, COMPAT_PREFIX_LEN) == 0 || memcmp(uu, _unknown_gid_compat_prefix, COMPAT_PREFIX_LEN) == 0) {
+			rec_type = MBR_REC_TYPE_GROUP;
+		} else {
+			membership_reply_with_error(message, ENOENT);
+			return;
+		}
+
+		if ((target_type == ID_TYPE_UID && rec_type != MBR_REC_TYPE_USER) || (target_type == ID_TYPE_GID && rec_type != MBR_REC_TYPE_GROUP)) {
+			membership_reply_with_error(message, ENOENT);
+			return;
+		}
+
+		membership_reply_with_identifier(message, &id, sizeof(id), rec_type);
 	} else {
 		membership_reply_with_error(message, ENOSYS);
 	}
