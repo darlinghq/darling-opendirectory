@@ -103,21 +103,34 @@ static void rpc_mbr_identifier_translate(xpc_object_t message) {
 		return;
 	}
 
-	if (id_type == ID_TYPE_USERNAME && target_type == ID_TYPE_UUID) {
+	if ((id_type == ID_TYPE_USERNAME || id_type == ID_TYPE_GROUPNAME) && target_type == ID_TYPE_UUID) {
 		char tmp_string[256];
-		strncpy(tmp_string, identifier, (identifier_size < sizeof(tmp_string)) ? identifier_size : sizeof(tmp_string));
-		tmp_string[(identifier_size < sizeof(tmp_string)) ? identifier_size : sizeof(tmp_string) - 1] = '\0';
-		struct passwd* pw = getpwnam(tmp_string);
-
-		if (!pw) {
-			membership_reply_with_error(message, EINVAL);
-			return;
-		}
-
 		uuid_t tmp_uuid;
 
-		build_uuid(_user_compat_prefix, pw->pw_uid, tmp_uuid);
-		membership_reply_with_identifier(message, tmp_uuid, sizeof(tmp_uuid), MBR_REC_TYPE_USER);
+		strncpy(tmp_string, identifier, (identifier_size < sizeof(tmp_string)) ? identifier_size : sizeof(tmp_string));
+		tmp_string[(identifier_size < sizeof(tmp_string)) ? identifier_size : sizeof(tmp_string) - 1] = '\0';
+
+		if (id_type == ID_TYPE_USERNAME) {
+			struct passwd* pw = getpwnam(tmp_string);
+
+			if (!pw) {
+				membership_reply_with_error(message, ENOENT);
+				return;
+			}
+
+			build_uuid(_user_compat_prefix, pw->pw_uid, tmp_uuid);
+			membership_reply_with_identifier(message, tmp_uuid, sizeof(tmp_uuid), MBR_REC_TYPE_USER);
+		} else {
+			struct group* gr = getgrnam(tmp_string);
+
+			if (!gr) {
+				membership_reply_with_error(message, ENOENT);
+				return;
+			}
+
+			build_uuid(_group_compat_prefix, gr->gr_gid, tmp_uuid);
+			membership_reply_with_identifier(message, tmp_uuid, sizeof(tmp_uuid), MBR_REC_TYPE_GROUP);
+		}
 	} else if ((id_type == ID_TYPE_UID || id_type == ID_TYPE_GID) && target_type == ID_TYPE_UUID) {
 		id_t id;
 		uuid_t tmp_uuid;
